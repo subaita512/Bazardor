@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# 🛒 বাজার দর (BazarDor)
 
-First, run the development server:
+বাজার দর is a responsive price-tracking website that helps users explore the latest prices of daily necessities in Bangladesh.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- View daily prices of essential products.
+- See products with increasing and decreasing prices.
+- Browse products by category.
+- Search and sort products.
+- View individual product details and market prices.
+- Responsive design for mobile, tablet, and desktop.
+- Loading states and error messages for data fetching.
+- User authentication and profile management.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Technologies Used
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Better Auth
+- REST API
 
-## Learn More
+## API
 
-To learn more about Next.js, take a look at the following resources:
+The application fetches product information from:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`https://api.api-store.workers.dev/api/bazardor`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Run Locally
 
-## Deploy on Vercel
+1. Clone the repository.
+2. Open the project folder in your terminal.
+3. Install the dependencies:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open `http://localhost:3000` in your browser.
+
+## Project Purpose
+
+This project was created as a web development assignment to practice Next.js, React components, state management, API integration, routing, authentication, and responsive design.
+
+## Disclaimer
+
+সকল দাম সম্ভাব্য; বাজার অবস্থার ওপর নির্ভর করে পরিবর্তিত হয়।
