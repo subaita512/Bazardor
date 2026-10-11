@@ -2,7 +2,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
 
 type Product = {
   id: string | number;
@@ -168,9 +170,7 @@ function productChange(product: Product) {
     return { direction: "up", pct: Math.abs(pct) };
   }
 
-  if (
-    ["down", "decrease", "decreased", "fall", "falling"].includes(direction)
-  ) {
+  if (["down", "decrease", "decreased", "fall", "falling"].includes(direction)) {
     return { direction: "down", pct: Math.abs(pct) };
   }
 
@@ -234,11 +234,7 @@ function ProductCard({ product }: { product: Product }) {
                 : "bg-gray-100 text-gray-600"
           }`}
         >
-          {change.direction === "up"
-            ? "▲ "
-            : change.direction === "down"
-              ? "▼ "
-              : ""}
+          {change.direction === "up" ? "▲ " : change.direction === "down" ? "▼ " : ""}
           {change.pct ? `${formatPrice(change.pct)}%` : "পরিবর্তন নেই"}
         </span>
       </div>
@@ -280,6 +276,9 @@ function ProductSkeleton() {
 }
 
 export default function HomePage() {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
   const [loading, setLoading] = useState(true);
@@ -288,6 +287,8 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [banglaDate, setBanglaDate] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -328,9 +329,7 @@ export default function HomePage() {
               typeof item.icon === "string"
           );
 
-          if (validCategories.length > 0) {
-            setCategories(validCategories);
-          }
+          if (validCategories.length > 0) setCategories(validCategories);
         }
       } catch (error) {
         console.error("Category loading failed:", error);
@@ -401,7 +400,6 @@ export default function HomePage() {
 
     const filtered = products.filter((product) => {
       const matches = matchesCategory(product, activeCategory);
-
       const matchesSearch =
         !term ||
         productName(product).toLowerCase().includes(term) ||
@@ -411,15 +409,12 @@ export default function HomePage() {
       return matches && matchesSearch;
     });
 
-    // Sort a new array so the original API product list stays unchanged.
     if (sortBy === "price-low") {
       filtered.sort((a, b) => productPrice(a) - productPrice(b));
     } else if (sortBy === "price-high") {
       filtered.sort((a, b) => productPrice(b) - productPrice(a));
     } else if (sortBy === "name") {
-      filtered.sort((a, b) =>
-        productName(a).localeCompare(productName(b), "bn")
-      );
+      filtered.sort((a, b) => productName(a).localeCompare(productName(b), "bn"));
     }
 
     return filtered;
@@ -448,6 +443,26 @@ export default function HomePage() {
     ...categories,
   ];
 
+  async function handleSignOut() {
+    setAuthError("");
+    setSigningOut(true);
+
+    try {
+      const result = await authClient.signOut();
+
+      if (result.error) {
+        setAuthError(result.error.message || "সাইন আউট করা যায়নি।");
+        return;
+      }
+
+      router.refresh();
+    } catch {
+      setAuthError("সাইন আউট করা যায়নি। আবার চেষ্টা করুন।");
+    } finally {
+      setSigningOut(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f7faf7]">
       <header className="border-b border-gray-100 bg-white">
@@ -459,21 +474,52 @@ export default function HomePage() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/signin"
-              className="rounded-xl border border-green-700 px-4 py-2 text-sm font-bold text-green-800 hover:bg-green-50"
-            >
-              সাইন ইন
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-xl bg-green-700 px-4 py-2 text-sm font-bold text-white hover:bg-green-800"
-            >
-              সাইন আপ
-            </Link>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {isPending ? (
+              <span className="px-4 py-2 text-sm text-gray-500">
+                লোড হচ্ছে...
+              </span>
+            ) : session?.user ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="max-w-44 truncate rounded-xl border border-green-700 px-4 py-2 text-sm font-bold text-green-800 hover:bg-green-50"
+                >
+                  👤 {session.user.name || "প্রোফাইল"}
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60"
+                >
+                  {signingOut ? "সাইন আউট হচ্ছে..." : "সাইন আউট"}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/signin"
+                  className="rounded-xl border border-green-700 px-4 py-2 text-sm font-bold text-green-800 hover:bg-green-50"
+                >
+                  সাইন ইন
+                </Link>
+                <Link
+                  href="/signup"
+                  className="rounded-xl bg-green-700 px-4 py-2 text-sm font-bold text-white hover:bg-green-800"
+                >
+                  সাইন আপ
+                </Link>
+              </>
+            )}
           </div>
         </div>
+
+        {authError && (
+          <p role="alert" className="mx-auto max-w-7xl px-4 pb-3 text-sm text-red-700 sm:px-6">
+            {authError}
+          </p>
+        )}
 
         <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-4 sm:px-6">
           {categoryOptions.map((category) => (
@@ -481,9 +527,9 @@ export default function HomePage() {
               key={category.id}
               onClick={() => {
                 setActiveCategory(category.id);
-                document
-                  .getElementById("সব-পণ্য")
-                  ?.scrollIntoView({ behavior: "smooth" });
+                document.getElementById("সব-পণ্য")?.scrollIntoView({
+                  behavior: "smooth",
+                });
               }}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
                 activeCategory === category.id
@@ -591,7 +637,6 @@ export default function HomePage() {
               যেসব পণ্যের দাম বেড়েছে
             </p>
           </div>
-
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {risers.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -610,7 +655,6 @@ export default function HomePage() {
               যেসব পণ্যের দাম কমেছে
             </p>
           </div>
-
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {fallers.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -648,16 +692,13 @@ export default function HomePage() {
           <p className="text-sm text-gray-600">
             পাওয়া গেছে: {formatPrice(filteredProducts.length)}টি পণ্য
           </p>
-
           <label className="flex items-center gap-3">
             <span className="shrink-0 text-sm font-semibold text-gray-700">
               সাজান:
             </span>
             <select
               value={sortBy}
-              onChange={(event) =>
-                setSortBy(event.target.value as SortOption)
-              }
+              onChange={(event) => setSortBy(event.target.value as SortOption)}
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100 sm:w-auto"
             >
               <option value="default">ডিফল্ট</option>
