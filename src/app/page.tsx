@@ -16,6 +16,9 @@ type Product = {
   emoji?: string;
   unit?: string;
   today?: number | string;
+  currentPrice?: number | string;
+  price?: number | string;
+  todayPrice?: number | string;
   yesterday?: number | string;
   lastWeek?: number | string;
   lastMonth?: number | string;
@@ -34,6 +37,8 @@ type Category = {
   nameBn: string;
   icon: string;
 };
+
+type SortOption = "default" | "price-low" | "price-high" | "name";
 
 const API_URLS = ["/api/bazardor/products"];
 
@@ -116,22 +121,27 @@ function productEmoji(product: Product): string {
   if (product.emoji) return product.emoji;
 
   const category = String(product.category || "").toLowerCase();
+  const categoryName = String(product.categoryNameBn || "");
 
-  if (category.includes("chal") || category.includes("rice")) return "🍚";
-  if (category.includes("dal") || category.includes("lentil")) return "🫘";
-  if (category.includes("tel") || category.includes("oil")) return "🛢️";
-  if (category.includes("sobji") || category.includes("vegetable")) return "🥬";
-  if (category.includes("mach") || category.includes("fish")) return "🐟";
-  if (category.includes("mangsho") || category.includes("meat")) return "🍗";
+  if (category.includes("chal") || category.includes("rice") || categoryName.includes("চাল")) return "🍚";
+  if (category.includes("dal") || category.includes("lentil") || categoryName.includes("ডাল")) return "🫘";
+  if (category.includes("tel") || category.includes("oil") || categoryName.includes("তেল")) return "🛢️";
+  if (category.includes("sobji") || category.includes("vegetable") || categoryName.includes("সবজি")) return "🥬";
+  if (category.includes("mach") || category.includes("fish") || categoryName.includes("মাছ")) return "🐟";
+  if (category.includes("mangsho") || category.includes("meat") || categoryName.includes("মাংস")) return "🍗";
+
   if (
     category.includes("dim") ||
     category.includes("egg") ||
     category.includes("milk") ||
-    category.includes("dui")
+    category.includes("dui") ||
+    categoryName.includes("ডিম") ||
+    categoryName.includes("দুধ")
   ) {
     return "🥛";
   }
-  if (category.includes("mosla") || category.includes("spice")) return "🌶️";
+
+  if (category.includes("mosla") || category.includes("spice") || categoryName.includes("মসলা")) return "🌶️";
 
   return "🛒";
 }
@@ -271,12 +281,12 @@ function ProductSkeleton() {
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] =
-    useState<Category[]>(defaultCategories);
+  const [categories, setCategories] = useState<Category[]>(defaultCategories);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("default");
   const [banglaDate, setBanglaDate] = useState("");
 
   useEffect(() => {
@@ -294,7 +304,6 @@ export default function HomePage() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  // Fetch categories from the API.
   useEffect(() => {
     let cancelled = false;
 
@@ -304,9 +313,7 @@ export default function HomePage() {
           cache: "no-store",
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to load categories");
-        }
+        if (!response.ok) throw new Error("Failed to load categories");
 
         const data: unknown = await response.json();
 
@@ -337,7 +344,6 @@ export default function HomePage() {
     };
   }, []);
 
-  // Fetch products from the API.
   useEffect(() => {
     let cancelled = false;
 
@@ -391,21 +397,33 @@ export default function HomePage() {
   }, []);
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    const term = search.trim().toLowerCase();
+
+    const filtered = products.filter((product) => {
       const matches = matchesCategory(product, activeCategory);
-      const term = search.trim().toLowerCase();
 
       const matchesSearch =
         !term ||
         productName(product).toLowerCase().includes(term) ||
-        String(product.categoryNameBn || "")
-          .toLowerCase()
-          .includes(term) ||
+        String(product.categoryNameBn || "").toLowerCase().includes(term) ||
         String(product.category || "").toLowerCase().includes(term);
 
       return matches && matchesSearch;
     });
-  }, [products, activeCategory, search]);
+
+    // Sort a new array so the original API product list stays unchanged.
+    if (sortBy === "price-low") {
+      filtered.sort((a, b) => productPrice(a) - productPrice(b));
+    } else if (sortBy === "price-high") {
+      filtered.sort((a, b) => productPrice(b) - productPrice(a));
+    } else if (sortBy === "name") {
+      filtered.sort((a, b) =>
+        productName(a).localeCompare(productName(b), "bn")
+      );
+    }
+
+    return filtered;
+  }, [products, activeCategory, search, sortBy]);
 
   const risers = useMemo(
     () =>
@@ -626,6 +644,30 @@ export default function HomePage() {
           </label>
         </div>
 
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-gray-600">
+            পাওয়া গেছে: {formatPrice(filteredProducts.length)}টি পণ্য
+          </p>
+
+          <label className="flex items-center gap-3">
+            <span className="shrink-0 text-sm font-semibold text-gray-700">
+              সাজান:
+            </span>
+            <select
+              value={sortBy}
+              onChange={(event) =>
+                setSortBy(event.target.value as SortOption)
+              }
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100 sm:w-auto"
+            >
+              <option value="default">ডিফল্ট</option>
+              <option value="price-low">দাম: কম থেকে বেশি</option>
+              <option value="price-high">দাম: বেশি থেকে কম</option>
+              <option value="name">নাম অনুযায়ী</option>
+            </select>
+          </label>
+        </div>
+
         <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
           {categoryOptions.map((category) => (
             <button
@@ -669,6 +711,7 @@ export default function HomePage() {
               onClick={() => {
                 setSearch("");
                 setActiveCategory("all");
+                setSortBy("default");
               }}
               className="mt-4 rounded-lg bg-green-700 px-4 py-2 font-bold text-white"
             >
