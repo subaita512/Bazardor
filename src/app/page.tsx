@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 
 type Product = {
@@ -125,12 +125,41 @@ function productEmoji(product: Product): string {
   const category = String(product.category || "").toLowerCase();
   const categoryName = String(product.categoryNameBn || "");
 
-  if (category.includes("chal") || category.includes("rice") || categoryName.includes("চাল")) return "🍚";
-  if (category.includes("dal") || category.includes("lentil") || categoryName.includes("ডাল")) return "🫘";
-  if (category.includes("tel") || category.includes("oil") || categoryName.includes("তেল")) return "🛢️";
-  if (category.includes("sobji") || category.includes("vegetable") || categoryName.includes("সবজি")) return "🥬";
-  if (category.includes("mach") || category.includes("fish") || categoryName.includes("মাছ")) return "🐟";
-  if (category.includes("mangsho") || category.includes("meat") || categoryName.includes("মাংস")) return "🍗";
+  if (
+    category.includes("chal") ||
+    category.includes("rice") ||
+    categoryName.includes("চাল")
+  ) return "🍚";
+
+  if (
+    category.includes("dal") ||
+    category.includes("lentil") ||
+    categoryName.includes("ডাল")
+  ) return "🫘";
+
+  if (
+    category.includes("tel") ||
+    category.includes("oil") ||
+    categoryName.includes("তেল")
+  ) return "🛢️";
+
+  if (
+    category.includes("sobji") ||
+    category.includes("vegetable") ||
+    categoryName.includes("সবজি")
+  ) return "🥬";
+
+  if (
+    category.includes("mach") ||
+    category.includes("fish") ||
+    categoryName.includes("মাছ")
+  ) return "🐟";
+
+  if (
+    category.includes("mangsho") ||
+    category.includes("meat") ||
+    categoryName.includes("মাংস")
+  ) return "🍗";
 
   if (
     category.includes("dim") ||
@@ -139,11 +168,13 @@ function productEmoji(product: Product): string {
     category.includes("dui") ||
     categoryName.includes("ডিম") ||
     categoryName.includes("দুধ")
-  ) {
-    return "🥛";
-  }
+  ) return "🥛";
 
-  if (category.includes("mosla") || category.includes("spice") || categoryName.includes("মসলা")) return "🌶️";
+  if (
+    category.includes("mosla") ||
+    category.includes("spice") ||
+    categoryName.includes("মসলা")
+  ) return "🌶️";
 
   return "🛒";
 }
@@ -234,7 +265,11 @@ function ProductCard({ product }: { product: Product }) {
                 : "bg-gray-100 text-gray-600"
           }`}
         >
-          {change.direction === "up" ? "▲ " : change.direction === "down" ? "▼ " : ""}
+          {change.direction === "up"
+            ? "▲ "
+            : change.direction === "down"
+              ? "▼ "
+              : ""}
           {change.pct ? `${formatPrice(change.pct)}%` : "পরিবর্তন নেই"}
         </span>
       </div>
@@ -329,7 +364,9 @@ export default function HomePage() {
               typeof item.icon === "string"
           );
 
-          if (validCategories.length > 0) setCategories(validCategories);
+          if (validCategories.length > 0) {
+            setCategories(validCategories);
+          }
         }
       } catch (error) {
         console.error("Category loading failed:", error);
@@ -414,7 +451,9 @@ export default function HomePage() {
     } else if (sortBy === "price-high") {
       filtered.sort((a, b) => productPrice(b) - productPrice(a));
     } else if (sortBy === "name") {
-      filtered.sort((a, b) => productName(a).localeCompare(productName(b), "bn"));
+      filtered.sort((a, b) =>
+        productName(a).localeCompare(productName(b), "bn")
+      );
     }
 
     return filtered;
@@ -487,6 +526,7 @@ export default function HomePage() {
                 >
                   👤 {session.user.name || "প্রোফাইল"}
                 </Link>
+
                 <button
                   type="button"
                   onClick={handleSignOut}
@@ -504,6 +544,7 @@ export default function HomePage() {
                 >
                   সাইন ইন
                 </Link>
+
                 <Link
                   href="/signup"
                   className="rounded-xl bg-green-700 px-4 py-2 text-sm font-bold text-white hover:bg-green-800"
@@ -516,7 +557,10 @@ export default function HomePage() {
         </div>
 
         {authError && (
-          <p role="alert" className="mx-auto max-w-7xl px-4 pb-3 text-sm text-red-700 sm:px-6">
+          <p
+            role="alert"
+            className="mx-auto max-w-7xl px-4 pb-3 text-sm text-red-700 sm:px-6"
+          >
             {authError}
           </p>
         )}
@@ -600,15 +644,15 @@ export default function HomePage() {
           </a>
         </div>
 
-        <div className="flex min-h-64 items-center justify-center rounded-3xl bg-gradient-to-br from-green-100 via-emerald-50 to-yellow-50 p-8">
-          <div className="grid grid-cols-3 gap-4 text-5xl sm:text-6xl">
-            <span>🍚</span>
-            <span>🥬</span>
-            <span>🐟</span>
-            <span>🫘</span>
-            <span>🛒</span>
-            <span>🥚</span>
-          </div>
+        <div className="flex min-h-64 items-center justify-center rounded-3xl bg-gradient-to-br from-green-100 via-emerald-50 to-yellow-50 p-6 sm:p-8">
+          <Image
+            src="/bazar-hero.png"
+            alt="বাজার দর - ফলের ঝুড়ির লোগো"
+            width={320}
+            height={260}
+            priority
+            className="h-auto w-full max-w-[320px] object-contain"
+          />
         </div>
       </section>
 
@@ -637,6 +681,7 @@ export default function HomePage() {
               যেসব পণ্যের দাম বেড়েছে
             </p>
           </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {risers.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -655,6 +700,7 @@ export default function HomePage() {
               যেসব পণ্যের দাম কমেছে
             </p>
           </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {fallers.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -692,13 +738,17 @@ export default function HomePage() {
           <p className="text-sm text-gray-600">
             পাওয়া গেছে: {formatPrice(filteredProducts.length)}টি পণ্য
           </p>
+
           <label className="flex items-center gap-3">
             <span className="shrink-0 text-sm font-semibold text-gray-700">
               সাজান:
             </span>
+
             <select
               value={sortBy}
-              onChange={(event) => setSortBy(event.target.value as SortOption)}
+              onChange={(event) =>
+                setSortBy(event.target.value as SortOption)
+              }
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100 sm:w-auto"
             >
               <option value="default">ডিফল্ট</option>
@@ -740,14 +790,17 @@ export default function HomePage() {
         ) : (
           <div className="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-12 text-center">
             <div className="text-4xl">🧺</div>
+
             <h3 className="mt-3 text-lg font-bold text-gray-800">
               {error ? "পণ্য দেখানো যাচ্ছে না" : "কোনো পণ্য পাওয়া যায়নি"}
             </h3>
+
             <p className="mt-2 text-sm text-gray-500">
               {error
                 ? "উপরের ত্রুটির বার্তাটি দেখুন।"
                 : "অন্য নাম দিয়ে খুঁজুন অথবা অন্য ক্যাটাগরি বেছে নিন।"}
             </p>
+
             <button
               onClick={() => {
                 setSearch("");
@@ -765,12 +818,15 @@ export default function HomePage() {
       <footer className="mt-8 bg-gray-900 text-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
           <p className="text-lg font-extrabold">🛒 বাজার দর</p>
+
           <p className="mt-2 text-sm text-gray-300">
             বাজার দর — প্রয়োজনীয় পণ্যের দাম এক নজরে।
           </p>
+
           <p className="mt-2 text-xs leading-6 text-gray-400">
             সকল দাম সম্ভাব্য; বাজার অবস্থার ওপর নির্ভর করে পরিবর্তিত হয়।
           </p>
+
           <p className="mt-5 text-xs text-gray-500">© ২০২৬ বাজার দর</p>
         </div>
       </footer>

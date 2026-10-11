@@ -8,7 +8,6 @@ import { authClient } from "@/lib/auth-client";
 
 export default function SignInPage() {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -26,9 +25,7 @@ export default function SignInPage() {
       });
 
       if (result.error) {
-        setError(
-          result.error.message || "সাইন ইন করা যায়নি। তথ্য আবার পরীক্ষা করুন।"
-        );
+        setError(result.error.message || "সাইন ইন করা যায়নি।");
         return;
       }
 
@@ -37,6 +34,28 @@ export default function SignInPage() {
     } catch {
       setError("সাইন ইন করা যায়নি। আবার চেষ্টা করুন।");
     } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError("");
+    setLoading(true);
+
+    try {
+      const result = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+
+      if (result.error) {
+        setError(result.error.message || "Google সাইন ইন ব্যর্থ হয়েছে।");
+        setLoading(false);
+      }
+    } catch {
+      setError(
+        "Google সাইন ইন ব্যর্থ হয়েছে। Google OAuth configuration পরীক্ষা করুন।"
+      );
       setLoading(false);
     }
   }
@@ -51,12 +70,24 @@ export default function SignInPage() {
         <h1 className="mt-6 text-3xl font-bold text-gray-900">
           সাইন ইন করুন
         </h1>
-
         <p className="mt-2 text-gray-600">
           আপনার বাজার দর অ্যাকাউন্টে প্রবেশ করুন।
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="mt-8 w-full rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-60"
+        >
+          {loading ? "সংযোগ হচ্ছে..." : "G — Google দিয়ে সাইন ইন"}
+        </button>
+
+        <div className="my-6 text-center text-sm text-gray-500">
+          অথবা ইমেইল দিয়ে সাইন ইন করুন
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="email" className="mb-2 block font-medium">
               ইমেইল ঠিকানা
@@ -90,10 +121,7 @@ export default function SignInPage() {
           </div>
 
           {error && (
-            <p
-              role="alert"
-              className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
-            >
+            <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
               {error}
             </p>
           )}
@@ -101,7 +129,7 @@ export default function SignInPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-green-700 px-4 py-3 font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-green-700 px-4 py-3 font-bold text-white hover:bg-green-800 disabled:opacity-60"
           >
             {loading ? "সাইন ইন হচ্ছে..." : "সাইন ইন"}
           </button>

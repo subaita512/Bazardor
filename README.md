@@ -1,43 +1,57 @@
-# 🛒 বাজার দর (BazarDor)
+# 🛒 বাজার দর — BazarDor
 
-বাজার দর is a website where users can check the prices of daily necessities in Bangladesh. It helps users explore products, compare prices, and see which products have increasing or decreasing prices.
+**প্রয়োজনীয় পণ্যের দাম এক নজরে।**
 
-## Features
+BazarDor is a Bangla-first web application that helps users explore the prices of everyday essentials in Bangladesh. Users can browse products, filter by category, compare prices, and view product details.
 
-* View daily prices of essential products.
-* See products with increasing and decreasing prices.
-* Browse products by category.
-* Search for products by name.
-* Sort products by price and name.
-* View details of individual products.
-* See market prices for products.
-* Create an account and sign in.
-* View and update user profile information.
-* Use the website on mobile, tablet, and desktop devices.
+## 🌐 Project Links
 
-## Technologies Used
+* **Live Website:** https://deft-pastelito-68f251.netlify.app
+* **GitHub Repository:** https://github.com/subaita512/bazardor
 
-* Next.js
+## ✨ Key Features
+
+1. **Homepage and Price Ticker:** Browse everyday products and view price changes.
+2. **Product Categories:** Filter products by category and sort them by price.
+3. **Product Details:** View individual product information and available price comparisons.
+4. **Authentication:** Register and sign in using email and password with Better Auth.
+5. **Profile Management:** View profile information and update the user's name.
+6. **Responsive Design:** Layout designed for mobile, tablet, and desktop screens.
+7. **Bengali Interface:** Bangla product information and Bengali price formatting.
+
+## 🛠️ Technologies Used
+
+* Next.js with App Router
 * React
 * TypeScript
 * Tailwind CSS
 * Better Auth
 * REST API
+* Git and GitHub
+* Netlify for deployment
 
-## API
+## 📡 API
 
-This project uses an API to get product and category information.
+The application uses the BazarDor API to retrieve product and category information.
 
-API URL: https://api.api-store.workers.dev/api/bazardor
+Base API URL:
 
-## How to Run Locally
+`https://api.api-store.workers.dev/api/bazardor`
 
-Follow these steps to run the project on your computer.
+Available endpoints include:
+
+* `/products` — retrieve products
+* `/products?category=chal` — filter products by category
+* `/products/1` — retrieve a product by ID
+* `/categories` — retrieve categories
+* `/categories/chal` — retrieve a specific category
+
+## 🚀 Run Locally
 
 1. Clone the repository:
 
    ```bash
-   git clone YOUR_GITHUB_REPOSITORY_URL
+   git clone https://github.com/subaita512/bazardor.git
    ```
 
 2. Open the project folder:
@@ -46,29 +60,28 @@ Follow these steps to run the project on your computer.
    cd bazardor
    ```
 
-3. Install the required packages:
+3. Install dependencies:
 
    ```bash
    npm install
    ```
 
-4. Start the development server:
+4. Configure the environment variables required by Better Auth and any other services used by the project in `.env.local`. Never commit secret keys to GitHub.
+
+5. Start the development server:
 
    ```bash
    npm run dev
    ```
 
-5. Open http://localhost:3000 in your browser.
+6. Open http://localhost:3000.
 
-**Note:** Add any required environment variables to your `.env.local` file before running the project.
+## 📱 Responsive Design
 
-## Project Purpose
+BazarDor uses responsive layouts to support different screen sizes and devices.
 
-This project was created as a web development assignment. Through this project, I practiced working with Next.js, React components, state management, API integration, routing, authentication, and responsive design.
+## ⚠️ Disclaimer
 
-## Disclaimer
+Displayed prices are indicative and may change depending on market conditions.
 
-সকল দাম সম্ভাব্য এবং বাজারের অবস্থার ওপর নির্ভর করে পরিবর্তিত হতে পারে।
-**Live Website:** https://deft-pastelito-68f251.netlify.app
 
-**GitHub Repository:** https://github.com/subaita512/bazardor
