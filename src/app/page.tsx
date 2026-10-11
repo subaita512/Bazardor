@@ -28,20 +28,24 @@ type Product = {
   [key: string]: unknown;
 };
 
-const API_URLS = [
-  "https://api.api-store.workers.dev/api/bazardor/products",
-  "https://api.abcz.workers.dev/api/bazardor/products",
-];
+type Category = {
+  id: string;
+  slug: string;
+  nameBn: string;
+  icon: string;
+};
 
-const categories = [
-  { id: "all", label: "সব পণ্য", emoji: "🛍️" },
-  { id: "chal", label: "চাল", emoji: "🍚" },
-  { id: "dal", label: "ডাল", emoji: "🫘" },
-  { id: "tel", label: "তেল", emoji: "🫗" },
-  { id: "sobji", label: "সবজি", emoji: "🥬" },
-  { id: "mach", label: "মাছ", emoji: "🐟" },
-  { id: "mangsho", label: "মাংস", emoji: "🍗" },
-  { id: "dim", label: "ডিম", emoji: "🥚" },
+const API_URLS = ["/api/bazardor/products"];
+
+const defaultCategories: Category[] = [
+  { id: "chal", slug: "chal", nameBn: "চাল", icon: "🍚" },
+  { id: "dal", slug: "dal", nameBn: "ডাল", icon: "🫘" },
+  { id: "tel", slug: "tel", nameBn: "তেল", icon: "🛢️" },
+  { id: "sobji", slug: "sobji", nameBn: "সবজি", icon: "🥬" },
+  { id: "mach", slug: "mach", nameBn: "মাছ", icon: "🐟" },
+  { id: "mangsho", slug: "mangsho", nameBn: "মাংস", icon: "🍗" },
+  { id: "dim-dui", slug: "dim-dui", nameBn: "ডিম-দুধ", icon: "🥛" },
+  { id: "mosla", slug: "mosla", nameBn: "মসলা", icon: "🌶️" },
 ];
 
 function getArray(data: unknown): Product[] {
@@ -57,6 +61,7 @@ function getArray(data: unknown): Product[] {
 
       if (value && typeof value === "object") {
         const nested = value as Record<string, unknown>;
+
         for (const nestedKey of ["products", "items", "results"]) {
           if (Array.isArray(nested[nestedKey])) {
             return nested[nestedKey] as Product[];
@@ -83,9 +88,7 @@ function numberValue(value: unknown): number {
 }
 
 function formatPrice(value: unknown): string {
-  const amount = numberValue(value);
-
-  return amount.toLocaleString("bn-BD", {
+  return numberValue(value).toLocaleString("bn-BD", {
     maximumFractionDigits: 2,
   });
 }
@@ -116,11 +119,19 @@ function productEmoji(product: Product): string {
 
   if (category.includes("chal") || category.includes("rice")) return "🍚";
   if (category.includes("dal") || category.includes("lentil")) return "🫘";
-  if (category.includes("tel") || category.includes("oil")) return "🫗";
+  if (category.includes("tel") || category.includes("oil")) return "🛢️";
   if (category.includes("sobji") || category.includes("vegetable")) return "🥬";
   if (category.includes("mach") || category.includes("fish")) return "🐟";
   if (category.includes("mangsho") || category.includes("meat")) return "🍗";
-  if (category.includes("dim") || category.includes("egg")) return "🥚";
+  if (
+    category.includes("dim") ||
+    category.includes("egg") ||
+    category.includes("milk") ||
+    category.includes("dui")
+  ) {
+    return "🥛";
+  }
+  if (category.includes("mosla") || category.includes("spice")) return "🌶️";
 
   return "🛒";
 }
@@ -134,7 +145,9 @@ function productChange(product: Product) {
     change?.pct ?? change?.percentage ?? product.changePercentage ?? 0
   );
 
-  let direction = String(change?.dir ?? change?.direction ?? "").toLowerCase();
+  let direction = String(
+    change?.dir ?? change?.direction ?? ""
+  ).toLowerCase();
 
   if (!direction && today && yesterday) {
     direction = today > yesterday ? "up" : today < yesterday ? "down" : "same";
@@ -170,10 +183,13 @@ function matchesCategory(product: Product, category: string): boolean {
     sobji: ["sobji", "vegetable", "সবজি", "সব্জি"],
     mach: ["mach", "fish", "মাছ"],
     mangsho: ["mangsho", "meat", "chicken", "মাংস"],
-    dim: ["dim", "egg", "ডিম"],
+    "dim-dui": ["dim-dui", "dim", "egg", "milk", "dui", "ডিম", "দুধ"],
+    mosla: ["mosla", "spice", "spices", "মসলা"],
   };
 
-  return (aliases[category] || [category]).some(
+  const selectedAliases = aliases[category] || [category];
+
+  return selectedAliases.some(
     (alias) => value.includes(alias) || categoryName.includes(alias)
   );
 }
@@ -181,9 +197,12 @@ function matchesCategory(product: Product, category: string): boolean {
 function ProductCard({ product }: { product: Product }) {
   const change = productChange(product);
   const identifier = product.slug || product.id;
+
   const categoryLabel =
     product.categoryNameBn ||
-    categories.find((item) => item.id === product.category)?.label ||
+    defaultCategories.find(
+      (item) => item.id === String(product.category || "")
+    )?.nameBn ||
     "নিত্যপ্রয়োজনীয় পণ্য";
 
   return (
@@ -215,6 +234,7 @@ function ProductCard({ product }: { product: Product }) {
       </div>
 
       <p className="mt-4 text-xs text-gray-500">{categoryLabel}</p>
+
       <h3 className="mt-1 min-h-12 font-bold text-gray-900 group-hover:text-green-700">
         {productName(product)}
       </h3>
@@ -251,6 +271,8 @@ function ProductSkeleton() {
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] =
+    useState<Category[]>(defaultCategories);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -272,6 +294,50 @@ export default function HomePage() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  // Fetch categories from the API.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCategories() {
+      try {
+        const response = await fetch("/api/bazardor/categories", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load categories");
+        }
+
+        const data: unknown = await response.json();
+
+        if (Array.isArray(data) && data.length > 0 && !cancelled) {
+          const validCategories = data.filter(
+            (item): item is Category =>
+              item !== null &&
+              typeof item === "object" &&
+              typeof item.id === "string" &&
+              typeof item.slug === "string" &&
+              typeof item.nameBn === "string" &&
+              typeof item.icon === "string"
+          );
+
+          if (validCategories.length > 0) {
+            setCategories(validCategories);
+          }
+        }
+      } catch (error) {
+        console.error("Category loading failed:", error);
+      }
+    }
+
+    void loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch products from the API.
   useEffect(() => {
     let cancelled = false;
 
@@ -359,6 +425,11 @@ export default function HomePage() {
     [products]
   );
 
+  const categoryOptions = [
+    { id: "all", slug: "all", nameBn: "সব পণ্য", icon: "🛍️" },
+    ...categories,
+  ];
+
   return (
     <main className="min-h-screen bg-[#f7faf7]">
       <header className="border-b border-gray-100 bg-white">
@@ -387,7 +458,7 @@ export default function HomePage() {
         </div>
 
         <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-4 sm:px-6">
-          {categories.map((category) => (
+          {categoryOptions.map((category) => (
             <button
               key={category.id}
               onClick={() => {
@@ -402,7 +473,7 @@ export default function HomePage() {
                   : "bg-gray-100 text-gray-700 hover:bg-green-50"
               }`}
             >
-              {category.emoji} {category.label}
+              {category.icon} {category.nameBn}
             </button>
           ))}
         </nav>
@@ -502,6 +573,7 @@ export default function HomePage() {
               যেসব পণ্যের দাম বেড়েছে
             </p>
           </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {risers.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -520,6 +592,7 @@ export default function HomePage() {
               যেসব পণ্যের দাম কমেছে
             </p>
           </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {fallers.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -554,7 +627,7 @@ export default function HomePage() {
         </div>
 
         <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
-          {categories.map((category) => (
+          {categoryOptions.map((category) => (
             <button
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
@@ -564,7 +637,7 @@ export default function HomePage() {
                   : "border border-gray-200 bg-white text-gray-700 hover:bg-green-50"
               }`}
             >
-              {category.label}
+              {category.icon} {category.nameBn}
             </button>
           ))}
         </div>
@@ -614,9 +687,7 @@ export default function HomePage() {
           <p className="mt-2 text-xs leading-6 text-gray-400">
             সকল দাম সম্ভাব্য; বাজার অবস্থার ওপর নির্ভর করে পরিবর্তিত হয়।
           </p>
-          <p className="mt-5 text-xs text-gray-500">
-            © ২০২৬ বাজার দর
-          </p>
+          <p className="mt-5 text-xs text-gray-500">© ২০২৬ বাজার দর</p>
         </div>
       </footer>
     </main>

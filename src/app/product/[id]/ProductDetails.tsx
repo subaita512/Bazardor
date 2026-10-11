@@ -46,7 +46,7 @@ type Product = {
   [key: string]: unknown;
 };
 
-const API_BASES = ["/api"];
+const API_BASES = ["/api/bazardor"];
 
 function getNumber(value: unknown): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) {
